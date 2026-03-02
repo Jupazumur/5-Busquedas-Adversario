@@ -1,13 +1,13 @@
 """
-Modulo para las clases básicas para realizar un jkuego de forma muy simplificada
+Modulo para las clases básicas para realizar un juego de forma muy simplificada
     
 Vamos a usar una orientación funcional en este modulo
 
 """
 
-from random import shuffle
+from random import shuffle, choice
     
-class ModeloJuegoZT2:
+class JuegoZT2:
     """
     Clase abstracta para juegos de suma cero, por turnos, dos jugadores.
     
@@ -16,10 +16,7 @@ class ModeloJuegoZT2:
     """
     def inicializa(self):
         """
-        Inicializa el estado inicial del juego y el jugador
-        que comienza (típicamente el primero)
-        
-        devuelve: (s0, j) donde s0 es el estado inicial y j el jugador
+        Inicializa el estado inicial del juego, siempre inicia el jugador 1
         
         """
         raise NotImplementedError("Hay que desarrollar este método, pues")
@@ -32,7 +29,7 @@ class ModeloJuegoZT2:
         """
         raise NotImplementedError("Hay que desarrollar este método, pues")      
     
-    def transicion(self, s, a, j):
+    def sucesor(self, s, a, j):
         """
         Devuelve el estado que resulta de realizar la jugada a en el estado s
         para el jugador j
@@ -53,129 +50,169 @@ class ModeloJuegoZT2:
         
         """
         raise NotImplementedError("Hay que desarrollar este método, pues")
-
-
-def juega_dos_jugadores(juego, jugador1, jugador2):
-    """
-    Juega un juego de dos jugadores
     
-    juego: instancia de ModeloJuegoZT
-    jugador1: función que recibe el estado y devuelve la jugada
-    jugador2: función que recibe el estado y devuelve la jugada
-    
+
+class JuegoInterface:
     """
-    s, j = juego.inicializa()
-    while not juego.terminal(s):
-        a = jugador1(juego, s, j) if j == 1 else jugador2(juego, s, j)
-        s = juego.transicion(s, a, j)
-        j = -j
-    return juego.ganancia(s), s
+    Clase abstracta para mostrar el estado del juego, y pedir la jugada al usuario
+
+    """
+    def __init__(self, juego, jugador1, jugador2):
+        self.juego = juego
+        self.jugador = [None, jugador1, jugador2]
+    
+    def muestra_estado(self, s):
+        """
+        Muestra el estado del juego
+        
+        """
+        raise NotImplementedError("Hay que desarrollar este método, pues")
+    
+    def muestra_ganador(self, ganancia):
+        """
+        Muestra el ganador del juego, al finalizar
+        
+        """
+        raise NotImplementedError("Hay que desarrollar este método, pues")
+
+    def jugador_humano(self, s, j):
+        """
+        Pide al usuario que ingrese una jugada, y la devuelve
+        
+        """
+        raise NotImplementedError("Hay que desarrollar este método, pues")
+
+    def pide_jugada(self, jugador, s, j):
+        """
+        Pide al jugador escoger la jugada a realizar, entre las acciones posibles
+
+        Regresa la acción escogida por el usuario, por defalt, se asume que el jugador es una interface
+        
+        """
+        if isinstance(self.jugador[j], Jugador):
+            return self.jugador[j].jugada(self.juego, s, j)
+        else:
+            return self.jugador_humano(s, j)
+
+    def juega(self, max_pasos=1_000):
+        """
+        Juega el juego, mostrando el estado del juego, y al finalizar, muestra el ganador
+        
+        """
+        s = self.juego.inicializa()
+        self.muestra_estado(s)
+        j = 1
+        pasos = 0
+        while not self.juego.terminal(s) and pasos < max_pasos:
+            a = self.pide_jugada(self.jugador[j], s, j)
+            s = self.juego.sucesor(s, a, j)
+            self.muestra_estado(s)
+            j = -j
+            pasos += 1
+        self.muestra_ganador(self.juego.ganancia(s))
+        
+
+class Jugador:
+    """
+    Clase abstracta para un jugador, que recibe el estado del juego y devuelve la jugada a realizar
+    """
+    def jugada(self, juego, s, j):
+        """
+        Devuelve la jugada a realizar por el jugador j en el estado s del juego
+        
+        """
+        raise NotImplementedError("Hay que desarrollar este método, pues")
 
 
-def minimax(juego, estado, jugador):
+class JugadorAleatorio(Jugador):
+    """
+    Jugador que escoge una jugada al azar entre las legales
+    """
+    def jugada(self, juego, s, j):
+        return choice(list(juego.jugadas_legales(s, j)))
+
+
+def minimax(juego, s, j):
     """
     Devuelve la mejor jugada para el jugador en el estado
     
     """
-    j = jugador
-    def max_val(estado, jugador):
-        if juego.terminal(estado):
-            return j * juego.ganancia(estado)
+    def max_val(s, j):
+        if juego.terminal(s):
+            return j * juego.ganancia(s)
         v = -1e10
-        for a in juego.jugadas_legales(estado, jugador):
-            v = max(
-                v, 
-                min_val(
-                    juego.transicion(estado, a, jugador), 
-                    -jugador
-                )
-            )
+        for a in juego.jugadas_legales(s, j):
+            v = max( v, min_val( juego.sucesor(s, a, j), -j))
         return v
     
-    def min_val(estado, jugador):
-        if juego.terminal(estado):
-            return j * juego.ganancia(estado)
+    def min_val(s, j):
+        if juego.terminal(s):
+            return -j * juego.ganancia(s)
         v = 1e10
-        for a in juego.jugadas_legales(estado, jugador):
-            v = min(
-                v, 
-                max_val(
-                    juego.transicion(estado, a, jugador), 
-                    -jugador
-                )
-            )
+        for a in juego.jugadas_legales(s, j):
+            v = min( v, max_val(juego.sucesor(s, a, j), -j))   
         return v
     
     return max(
-        juego.jugadas_legales(estado, jugador),
-        key=lambda a: min_val(
-            juego.transicion(estado, a, jugador), 
-            -jugador
-            )
-        )
+        juego.jugadas_legales(s, j),
+        key=lambda a: min_val( juego.sucesor(s, a, j), -j))
     
+class JugadorMinimax(Jugador):
+    """
+    Jugador que escoge la mejor jugada usando minimax
+    """
+    def jugada(self, juego, s, j):
+        return minimax(juego, s, j)
 
-def alpha_beta(juego, estado, jugador, ordena=None):
+
+def alpha_beta(juego, s, j, ordena=None):
     """
     Devuelve la mejor jugada para el jugador en el estado
     
     """
-    j = jugador
-    def max_val(estado, jugador, alpha, beta):
-        if juego.terminal(estado):
-            return j * juego.ganancia(estado)
+    if ordena is not None and not callable(ordena):
+        raise ValueError("El argumento ordena debe ser una función o None")
+    elif ordena is None:
+        def _ordena(lista):
+            shuffle(lista)
+            return lista
+        ordena = _ordena
+
+    def max_val(s, j, alfa, beta):
+        if juego.terminal(s):
+            return j * juego.ganancia(s)
         v = -1e10
-        jugadas = list(juego.jugadas_legales(estado, jugador))
-        if ordena:
-            jugadas = ordena(jugadas)
-        else:
-            shuffle(jugadas)
+        jugadas = ordena(list(juego.jugadas_legales(s, j)))
         for a in jugadas:
-            v = max(
-                v, 
-                min_val(
-                    juego.transicion(estado, a, jugador), 
-                    -jugador, 
-                    alpha, beta
-                )
-            )
+            v = max(v, min_val(juego.sucesor(s, a, j), -j, alfa, beta))
             if v >= beta:
                 return v
-            alpha = max(alpha, v)
-        return v
+            alfa = max(alfa, v)
+        return alfa
     
-    def min_val(estado, jugador, alpha, beta):
-        if juego.terminal(estado):
-            return j * juego.ganancia(estado)
+    def min_val(s, j, alfa, beta):
+        if juego.terminal(s):
+            return -j * juego.ganancia(s)
         v = 1e10
-        jugadas = list(juego.jugadas_legales(estado, jugador))
-        if ordena:
-            jugadas = ordena(jugadas)
-        else:
-            shuffle(jugadas)
+        jugadas = ordena(list(juego.jugadas_legales(s, j)))
         for a in jugadas:
-            v = min(
-                v, 
-                max_val(
-                    juego.transicion(estado, a, jugador), 
-                    -jugador, 
-                    alpha, beta
-                )
-            )
-            if v <= alpha:
+            v = min( v, max_val(juego.sucesor(s, a, j), -j, alfa, beta))
+            if v <= alfa:
                 return v
             beta = min(beta, v)
-        return v
+        return beta
     
-    jugadas = list(juego.jugadas_legales(estado, jugador))
-    if ordena:
-        jugadas = ordena(jugadas)
-    else:
-        shuffle(jugadas)
+    jugadas = ordena(list(juego.jugadas_legales(s, j)))
     return max(
         jugadas,
-        key=lambda a: min_val(
-                juego.transicion(estado, a, jugador), 
-                -jugador, 
-                -1e10, 1e10
-            ))
+        key=lambda a: min_val(juego.sucesor(s, a, j), -j, -1e10, 1e10))
+
+class JugadorAlphaBeta(Jugador):
+    """
+    Jugador que escoge la mejor jugada usando alpha-beta
+    """
+    def __init__(self, ordena=None):
+        self.ordena = ordena
+    
+    def jugada(self, juego, s, j):
+        return alpha_beta(juego, s, j, self.ordena)

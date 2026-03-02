@@ -26,19 +26,17 @@ empate.
 
 """
 
-from juegos_simplificado import ModeloJuegoZT2
-from juegos_simplificado import juega_dos_jugadores
-from minimax import jugador_negamax
-from minimax import minimax_iterativo
+import juegos_simplificado as js
+import minimax
 
-class Conecta4(ModeloJuegoZT2):
+class Conecta4(js.JuegoZT2):
     def inicializa(self):
-        return (tuple([0 for _ in range(6 * 7)]), 1)
+        return tuple([0 for _ in range(6 * 7)])
         
     def jugadas_legales(self, s, j):
         return (columna for columna in range(7) if s[columna] == 0)
     
-    def transicion(self, s, a, j):
+    def sucesor(self, s, a, j):
         s = list(s[:])
         for i in range(5, -1, -1):
             if s[a + 7 * i] == 0:
@@ -50,27 +48,19 @@ class Conecta4(ModeloJuegoZT2):
         #Verticales
         for i in range(7):
             for j in range(3):
-                if (s[i + 7 * j] == s[i + 7 * (j + 1)] 
-                    == s[i + 7 * (j + 2)] == s[i + 7 * (j + 3)] 
-                    != 0):
+                if (s[i + 7 * j] == s[i + 7 * (j + 1)] == s[i + 7 * (j + 2)] == s[i + 7 * (j + 3)] != 0):
                     return s[i + 7 * j]
         #Horizontales
         for i in range(6):
             for j in range(4):
-                if (s[7 * i + j] == s[7 * i + j + 1] 
-                    == s[7 * i + j + 2] == s[7 * i + j + 3] 
-                    != 0):
+                if (s[7 * i + j] == s[7 * i + j + 1] == s[7 * i + j + 2] == s[7 * i + j + 3] != 0):
                     return s[7 * i + j]
         #Diagonales
         for i in range(4):
             for j in range(3):
-                if (s[i + 7 * j] == s[i + 7 * j + 8] 
-                    == s[i + 7 * j + 16] == s[i + 7 * j + 24] 
-                    != 0):
+                if (s[i + 7 * j] == s[i + 7 * j + 8] == s[i + 7 * j + 16] == s[i + 7 * j + 24] != 0):
                     return s[i + 7 * j]
-                if (s[i + 7 * j + 3] == s[i + 7 * j + 9] 
-                    == s[i + 7 * j + 15] == s[i + 7 * j + 21] 
-                    != 0):
+                if (s[i + 7 * j + 3] == s[i + 7 * j + 9] == s[i + 7 * j + 15] == s[i + 7 * j + 21] != 0):
                     return s[i + 7 * j + 3]
         return 0
     
@@ -79,24 +69,38 @@ class Conecta4(ModeloJuegoZT2):
             return True
         return self.ganancia(s) != 0
     
-def pprint_conecta4(s):
-    a = [' X ' if x == 1 else ' O ' if x == -1 else '   ' 
-         for x in s]
-    print('\n 0 | 1 | 2 | 3 | 4 | 5 | 6')
-    for i in range(6):
-        print('|'.join(a[7 * i:7 * (i + 1)]))
-        print('---+---+---+---+---+---+---')
-    print('|'.join(a[42:49]))
+class InterfaceConecta4(js.JuegoInterface):
+    def muestra_estado(self, s):
+        """
+        Muestra el estado del juego, se puede usar la función pprint_conecta4
+        para mostrar el estado de forma más amigable
+
+        """
+        a = [' X ' if x == 1 else ' O ' if x == -1 else '   ' for x in s]
+        print('\n 0 | 1 | 2 | 3 | 4 | 5 | 6')
+        for i in range(6):
+            print('|'.join(a[7 * i:7 * (i + 1)]))
+            print('---+---+---+---+---+---+---\n')
     
-def jugador_manual_conecta4(juego, s, j):
-    pprint_conecta4(s)
-    print("Jugador", " XO"[j])
-    jugadas = list(juego.jugadas_legales(s, j))
-    print("Jugadas legales:", jugadas)
-    jugada = None
-    while jugada not in jugadas:
-        jugada = int(input("Jugada: "))
-    return jugada
+    def muestra_ganador(self, g):
+        """
+        Muestra el ganador del juego, se puede usar " XO"[g] para mostrar el
+        ganador de forma más amigable
+
+        """
+        if g != 0:
+            print("Gana el jugador " + " XO"[g])
+        else:
+            print("Un asqueroso empate")
+
+    def jugador_humano(self, s, j):
+        print("Jugador", " XO"[j])
+        jugadas = list(self.juego.jugadas_legales(s, j))
+        print("Jugadas legales:", jugadas)
+        jugada = None
+        while jugada not in jugadas:
+            jugada = int(input("Jugada: "))
+        return jugada
 
 def ordena_centro(jugadas, jugador):
     """
@@ -143,49 +147,45 @@ def evalua_3con(s):
     )
     promedio = conect3 / (7 * 4 + 6 * 5 + 5 * 4 + 5 * 4)
     if abs(promedio) >= 1:
-        print("ERROR, evaluación fuera de rango --> ", promedio)
+        raise ValueError("Evaluación fuera de rango --> ", promedio)
     return promedio
 
-
-    
 if __name__ == '__main__':
 
-    modelo = Conecta4()
-    print("="*40 + "\n" + "EL JUEGO DE CONECTA 4".center(40) + "\n" + "="*40)
-    
-    jugs = []
-    for j in [1, -1]:
-        print(f"Selección de jugadores para las {' XO'[j]}:")
-        sel = 0
-        print("   1. Jugador manual")
-        print("   2. Jugador negamax limitado en profundidad")
-        print("   3. Jugador negamax limitado en tiempo")
-        while sel not in [1, 2, 3]:
-            sel = int(input(f"Jugador para las {' XO'[j]}: "))
-    
-        if sel == 1:
-            jugs.append(jugador_manual_conecta4)
-        elif sel == 2:
-            d = None
-            while type(d) != int or d < 1:
-                d = int(input("Profundidad: "))
-            jugs.append(lambda juego, s, j: jugador_negamax(
-                juego, s, j, ordena=ordena_centro, evalua=evalua_3con, d=d)
+    cfg = {
+        "Jugador 1": "Humano",      #Puede ser "Humano", "Aleatorio", "Negamax", "Tiempo"
+        "Jugador 2": "Aleatorio",   #Puede ser "Humano", "Aleatorio", "Negamax", "Tiempo"
+        "profundidad máxima": 5,
+        "tiempo": 10,
+        "ordena": ordena_centro,    #Puede ser None o una función f(jugadas, j) -> lista de jugadas ordenada
+        "evalua": evalua_3con       #Puede ser None o una función f(estado) -> número entre -1 y 1
+    }
+
+    def jugador_cfg(cadena):
+        if cadena == "Humano":
+            return "Humano"
+        elif cadena == "Aleatorio":
+            return js.JugadorAleatorio()
+        elif cadena == "Negamax":
+            return minimax.JugadorNegamax(
+                ordena=cfg["ordena"], d=cfg["profundidad máxima"], evalua=cfg["evalua"]
+            )
+        elif cadena == "Tiempo":
+            return minimax.JugadorNegamaxIterativo(
+                tiempo=cfg["tiempo"], ordena=cfg["ordena"], evalua=cfg["evalua"]
             )
         else:
-            t = None
-            while type(t) != int or t < 1:
-                t = int(input("Tiempo: "))
-            jugs.append(lambda juego, s, j: minimax_iterativo(
-                juego, s, j, ordena=ordena_centro, evalua=evalua_3con, tiempo=t)
-            )
-        
-    g, s_final = juega_dos_jugadores(modelo, jugs[0], jugs[1])
-    print("\nSE ACABO EL JUEGO\n")
-    pprint_conecta4(s_final)
-    if g != 0:
-        print("Gana el jugador " + " XO"[g])
-    else:
-        print("Empate")
-    
-    
+            raise ValueError("Jugador no reconocido")
+
+    interfaz = InterfaceConecta4(
+        Conecta4(),
+        jugador1=jugador_cfg(cfg["Jugador 1"]),
+        jugador2=jugador_cfg(cfg["Jugador 2"])
+    )
+
+    print("El Juego del Conecta 4 ")
+    print("Jugador 1:", cfg["Jugador 1"])
+    print("Jugador 2:", cfg["Jugador 2"])
+    print()
+
+    interfaz.juega()

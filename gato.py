@@ -3,12 +3,9 @@ El juego del gato para ilustrar los modelos de juegos
 
 """
 
-from juegos_simplificado import ModeloJuegoZT2
-from juegos_simplificado import juega_dos_jugadores
-from juegos_simplificado import minimax
-from minimax import jugador_negamax
+import juegos_simplificado as js
 
-class Gato(ModeloJuegoZT2):
+class Gato(js.JuegoZT2):
     """
     El juego del gato 
 
@@ -18,7 +15,7 @@ class Gato(ModeloJuegoZT2):
         Inicializa el juego del gato
 
         """
-        return (tuple(9 * [0]), 1)
+        return tuple(9 * [0])
     
     def jugadas_legales(self, s, j):
         """
@@ -28,7 +25,7 @@ class Gato(ModeloJuegoZT2):
         """
         return [posicion for posicion in range(9) if s[posicion] == 0]
     
-    def transicion(self, s, a, j):
+    def sucesor(self, s, a, j):
         """
         Devuelve el estado que resulta de realizar la jugada a en el estado s
         para el jugador j
@@ -43,17 +40,8 @@ class Gato(ModeloJuegoZT2):
         Devuelve True si es terminal el estado actual,
 
         """
-        if 0 not in s:
+        if 0 not in s or self.ganancia(s) != 0:
             return True
-        if s[0] == s[4] == s[8] != 0:
-            return True
-        if s[2] == s[4] == s[6] != 0:
-            return True
-        for i in range(3):
-            if s[3 * i] == s[3 * i + 1] == s[3 * i + 2] != 0:
-                return True
-            if s[i] == s[i + 3] == s[i + 6] != 0:
-                return True
         return False
 
     def ganancia(self, s):
@@ -70,72 +58,57 @@ class Gato(ModeloJuegoZT2):
                 return s[3 * i]
             if s[i] == s[i + 3] == s[i + 6] != 0:
                 return s[i]
-        return 0    
-    
-def pprint_gato(s):
+        return 0   
+
+class GatoInterface(js.JuegoInterface):
     """
-    Imprime el estado del juego del gato
+    Clase para mostrar el estado del juego del gato, y pedir la jugada al usuario
 
     """
-    a = [' X ' if x == 1 else ' O ' if x == -1 else str(i).center(3) 
-         for (i, x) in enumerate(s)]
-    print(a[0] + '|' + a[1] + '|' + a[2])
-    print('---+---+---')
-    print(a[3] + '|' + a[4] + '|' + a[5])
-    print('---+---+---')
-    print(a[6] + '|' + a[7] + '|' + a[8])
-    
-def jugador_manual_gato(juego, s, j):
-    """
-    Jugador manual para el juego del gato
+    def muestra_estado(self, s):
+        """
+        Muestra el estado del juego del gato
 
-    """
-    jugada = None
-    print("Estado actual:")
-    pprint_gato(s)
-    print("Jugador:", j)
-    jugadas = juego.jugadas_legales(s, j)
-    print("Jugadas legales:", jugadas)
-    while jugada not in jugadas:
-        jugada = int(input("Jugada: "))
-    return jugada
-
-def jugador_minimax_gato(juego, s, j):
-    """
-    Jugador minimax para el juego del gato
-
-    """
-    return minimax(juego, s, j)
-
+        """
+        a = [' X ' if x == 1 else ' O ' if x == -1 else str(i).center(3) 
+             for (i, x) in enumerate(s)]
+        print('\n' + a[0] + '|' + a[1] + '|' + a[2])
+        print('---+---+---')
+        print(a[3] + '|' + a[4] + '|' + a[5])
+        print('---+---+---')
+        print(a[6] + '|' + a[7] + '|' + a[8] + '\n')
     
-def juega_gato(jugador='X'):
-    """
-    Juega el juego del gato
+    def muestra_ganador(self, ganancia):
+        """
+        Muestra el ganador del juego del gato, al finalizar
 
-    """
-    if jugador not in ['X', 'O']:
-        raise ValueError("El jugador solo puede tener los valores 'X' o 'O'")
-    juego = Gato()
+        """
+        if ganancia == 0:
+            print("\nY termina con un asqueroso empate")
+        elif ganancia == 1:
+            print("Ganó el jugador de las X\n")
+        else:
+            print("Ganó el jugador de las O\n") 
+
+    def jugador_humano(self, s, j):        
+        """
+        Pide la jugada al usuario para el juego del gato
+
+        """
+        jugada = None
+        print("Jugador:", 'X' if j == 1 else 'O')
+        jugadas = self.juego.jugadas_legales(s, j)
+        print("Jugadas legales:", jugadas)
+        while jugada not in jugadas:
+            jugada = int(input("Jugada: "))
+        return jugada
     
-    print("El juego del gato")
-    print(f"Las 'X' siempre empiezan y tu juegas con {jugador}")
-    
-    if jugador == 'X':
-        #g, s = juega_dos_jugadores(juego, jugador_manual_gato, jugador_minimax_gato)
-        g, s = juega_dos_jugadores(juego, jugador_manual_gato, jugador_negamax)
-    else:
-        #g, s = juega_dos_jugadores(juego, jugador_minimax_gato, jugador_manual_gato)
-        g, s = juega_dos_jugadores(juego, jugador_negamax, jugador_manual_gato)
-    
-    print("\nSE ACABO EL JUEGO\n")
-    pprint_gato(s)   
-    if g == 0:  
-        print("\nY termina con un asqueroso empate")
-    elif (g == 1 and jugador == 'X') or (g == -1 and jugador == 'O'):
-        print("\nGanaste, debe ser suerte")
-    else:
-        print("\nPerdiste, no tienes remedio, soy muy superior a un simple mortal")
-        
         
 if __name__ == '__main__':
-    juega_gato('O')
+
+    juego = Gato()
+    interfaz = GatoInterface(
+        juego, 
+        jugador1=js.JugadorAleatorio(), 
+        jugador2='Humano')
+    interfaz.juega(10)

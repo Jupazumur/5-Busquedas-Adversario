@@ -1,5 +1,5 @@
 """
-Modulo con el minimax con algunos los poderes
+Modulo con el minimax con algunos poderes
 
     1- Poda alfa-beta
     2- Ordenamiento de jugadas
@@ -8,43 +8,38 @@ Modulo con el minimax con algunos los poderes
     5- Tablas de transposicion
     6- Trazabilidad
 """
+import juegos_simplificado as js
 from random import shuffle
 from time import time
 
-def negamax(
-    juego, estado, jugador,
-    alpha=-1e10, beta=1e10, ordena=None, 
-    d=None, evalua=None,
-    transp={}, traza=[]
-    ):
+def negamax( juego, s, j, alpha=-1e10, beta=1e10, ordena=None, d=None, evalua=None, transp={}, traza=[]):
     """
     Devuelve la mejor jugada para el jugador en el estado
     
     Parametros
     ----------
-    juego (ModeloJuegoZT): Modelo del juego
-    estado (tuple): Estado del juego
-    jugador (-1, 1): Jugador que realiza la jugada
-    alpha (float): Limite inferior
-    beta (float): Limite superior
-    ordena (function:) Funcion de ordenamiento
-        si None, ordena aleatoriamente
-    d (int): Profundidad. 
-        Si None, busca hasta el final
-    evalua: function de evaluación
-        Siempre evalua para el jugador 1
-    transp (dict): Tabla de transposición
-    traza (list): Trazabilidad
+    juego:             juego que hereda de la clase js.JuegoZT2
+    s (tuple):         estado del juego
+    j (-1, 1):         jugador que realiza la jugada
+    alpha (float):     limite inferior
+    beta (float):      limite superior
+    ordena (fun):      funcion de ordenamiento, si None, ordena aleatoriamente
+    d (int):           profundidad, si None, busca hasta el final
+    evalua (fun):      function de evaluación, siempre evalua para el jugador 1
+    transp (dict):     tabla de transposición
+    traza (list):      trazabilidad
     
     Regresa
     -------
     tuple: (lista mejores jugadas, valor)
     
     """
+
+    # Validaciones
     if d != None and evalua == None:
-        raise ValueError("Se necesita evalua si d no es None")
+        raise ValueError("Se necesita la función evalua")
     if type(ordena) != type(None) and type(ordena) != type(lambda x: x):
-        raise ValueError("ordena debe ser una función")
+        raise ValueError("ordena debe ser una función o None")
     if type(evalua) != type(None) and type(evalua) != type(lambda x: x):
         raise ValueError("evalua debe ser una función")
     if type(transp) != dict:
@@ -52,17 +47,17 @@ def negamax(
     if type(traza) != list: 
         raise ValueError("traza debe ser una lista")
 
-    if juego.terminal(estado):
-        return [], jugador * juego.ganancia(estado)
+    if juego.terminal(s):
+        return [], j * juego.ganancia(s)
     if d == 0:
-        return [], jugador * evalua(estado)
-    if d != None and estado in transp and transp[estado][1] >= d:
-        return [], transp[estado][0]
+        return [], j * evalua(s)
+    if d != None and s in transp and transp[s][1] >= d:
+        return [], transp[s][0]
     
     v = -1e10
-    jugadas = list(juego.jugadas_legales(estado, jugador))
+    jugadas = list(juego.jugadas_legales(s, j))
     if ordena != None:
-        jugadas = ordena(jugadas, jugador)
+        jugadas = ordena(jugadas, j)
     else:
         shuffle(jugadas)
     if traza:
@@ -71,9 +66,8 @@ def negamax(
             jugadas = [a_pref] + [a for a in jugadas if a != a_pref]
     for a in jugadas:
         traza_actual, v2 = negamax(
-            juego, juego.transicion(estado, a, jugador), -jugador, 
-            -beta, -alpha, ordena, d if d == None else d - 1, 
-            evalua, transp, traza
+            juego, juego.sucesor(s, a, j), -j, -beta, -alpha, 
+            ordena, d if d == None else d - 1, evalua, transp, traza
         )
         v2 = -v2
         if v2 > v:
@@ -84,28 +78,25 @@ def negamax(
             break
         if v > alpha:
             alpha = v
-    transp[estado] = (v, d)
+    transp[s] = (v, d)
     return [mejor] + mejores, v 
 
-
-def jugador_negamax(
-    juego, estado, jugador, ordena=None, d=None, evalua=None
-    ):
+class JugadorNegamax(js.Jugador):
     """
-    Funcion burrito para el negamax
+    Jugador que escoge la mejor jugada usando negamax
+    """
+    def __init__(self, ordena=None, d=None, evalua=None):
+        self.ordena = ordena
+        self.d = d
+        self.evalua = evalua
     
-    """
-    traza, _ = negamax(
-        juego=juego, estado=estado, jugador=jugador, 
-        alpha=-1e10, beta=1e10, ordena=ordena, d=d, 
-        evalua=evalua, transp={}, traza=[])
-    return traza[0]
+    def jugada(self, juego, s, j):
+        return negamax(
+            juego, s, j, ordena=self.ordena, d=self.d, evalua=self.evalua
+        )[0][0]
 
 
-def minimax_iterativo(
-    juego, estado, jugador, tiempo=10,
-    ordena=None, d=None, evalua=None,
-    ):  
+def minimax_iterativo( juego, s, j, tiempo=10, ordena=None, evalua=None):  
     """
     Devuelve la mejor jugada para el jugador en el estado
     acotando a un periodo de tiempo
@@ -114,10 +105,21 @@ def minimax_iterativo(
     t0 = time()
     d, traza = 2, []
     while time() - t0 < tiempo/2:
-        traza, v = negamax(
-            juego=juego, estado=estado, jugador=jugador,  
-            alpha=-1e10, beta=1e10, ordena=ordena, d=d, evalua=evalua, 
-            transp={}, traza=traza
+        traza, _ = negamax(
+            juego, s, j, -1e10, 1e10, ordena=ordena, d=d, 
+            evalua=evalua, transp={}, traza=traza
         )
         d += 1
     return traza[0]
+
+class JugadorMinimaxIterativo(js.Jugador):
+    """
+    Jugador que escoge la mejor jugada usando minimax iterativo
+    """
+    def __init__(self, tiempo = 10, ordena=None, evalua=None):
+        self.tiempo = tiempo
+        self.ordena = ordena
+        self.evalua = evalua
+    
+    def jugada(self, juego, s, j):
+        return minimax_iterativo(juego, s, j, tiempo=self.tiempo, ordena=self.ordena, evalua=self.evalua)
