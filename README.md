@@ -2,12 +2,11 @@
 
 # Búsquedas con adversarios (minimax)
 
-**Evaluación de competencias 5**
 
 
 ## Objetivos
 
-1. Reforzar los conocimientos de los métodos de búsquedas por adversarios, en particular el algoritmo Minimax con poda $\alpha$-$\beta$ en su versión para dos jugadores por turnos.
+1. Reforzar los conocimientos de los métodos de búsquedas por adversarios, en particular el algoritmo Minimax con poda $\alpha$ - $\beta$ en su versión para dos jugadores por turnos.
 
 2. Desarrollar habilidades para establecer heurísticas de ordenamiento de jugadas con el fin de reducir los tiempos de búsqueda.
 
