@@ -102,13 +102,13 @@ class InterfaceConecta4(js.JuegoInterface):
             jugada = int(input("Jugada: "))
         return jugada
 
-# def ordena_centro(estado, jugadas, jugador):
+# def ordena_centro(jugadas, jugador):
 #     """
 #     Ordena las jugadas de acuerdo a la distancia al centro
 #     """
 #     return sorted(jugadas, key=lambda x: abs(x - 3))
 
-def ordena_centro(jugadas, jugador):
+def ordena_centro(estado, jugadas, jugador):
     """
     Ordena las jugadas de acuerdo a la distancia al centro
     """
