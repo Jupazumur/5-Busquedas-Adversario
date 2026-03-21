@@ -1,15 +1,8 @@
 import juegos_simplificado as js
+from othello_mapas import MAPA_ADYACENCIA as MAPA_ADY
 #import minimax
 
-
 class Othello(js.JuegoZT2):
-
-    # Diccionario de direcciones para el futuro
-    DIRECCIONES = {
-        (-1,  1), (0,  1), (1,  1),
-        (-1,  0),          (1,  0),
-        (-1, -1), (0, -1), (1, -1)
-    }
 
     def inicializa(self):
         # -1 es blanco, 1 es negro
@@ -26,20 +19,31 @@ class Othello(js.JuegoZT2):
         #    > Ser adyacente a una pieza del oponente en al menos una dirección.
         #    > Tener una pieza del jugador actual al final de una línea continua 
         #      de piezas del oponente empezando de esa casilla adyacente.
-        
-
+    
         jugadas_legales = []
 
         for casilla in range(64):
             if s[casilla] != 0:
                 continue
             
-                # TODO: anadir metodo para checar las ultimas dos
+            if self._checar_adyacentes(s[casilla], j):
+                continue
+
+            # TODO: anadir metodo para checar la ultima
 
         return jugadas_legales
 
-        #raise NotImplementedError("Hay que desarrollar este método, pues")
-    
+    def _checar_adyacentes(casilla, j):
+        """
+        Checa las casillas adyacentes de una casilla.
+        True si hay una ficha del oponente en una casilla adyacente.
+        """
+        casillas_adyacentes = MAPA_ADY[casilla].values()
+
+        for casilla_destino in casillas_adyacentes:
+            if casilla_destino == -j:
+                return True
+
     def sucesor(self, s, a, j):
         raise NotImplementedError("Hay que desarrollar este método, pues")
     
