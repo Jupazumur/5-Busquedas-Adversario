@@ -26,30 +26,51 @@ class Othello(js.JuegoZT2):
             if s[casilla] != 0:
                 continue
             
-            if not self._checar_adyacentes(s, casilla, j):
+            # if not self._checar_adyacentes(s, casilla, j):
+            #     continue
+
+            if not self._checar_captura(s, casilla, j):
                 continue
 
-            #si cumple con todas
+            #si cumple con ambas
             jugadas_legales.append(casilla)
-
-            # TODO: completar metodo para checar la ultima
 
         return jugadas_legales
 
-    def _checar_adyacentes(self, s, casilla, j):
-        """
-        Checa las casillas adyacentes de una casilla.
-        True si hay una ficha del oponente en una casilla adyacente.
-        """
-        casillas_adyacentes = MAPA_ADY[casilla].values()
+    # def _checar_adyacentes(self, s, casilla, j):
+    #     """
+    #     Checa las casillas adyacentes a una casilla.
+    #     True si hay una ficha del oponente en una casilla adyacente.
+    #     """
+    #     casillas_adyacentes = MAPA_ADY[casilla].values()
 
-        for casilla_destino in casillas_adyacentes:
-            if s[casilla_destino] == -j:
-                return True
-        return False
+    #     for casilla_destino in casillas_adyacentes:
+    #         if s[casilla_destino] == -j:
+    #             return True
+    #     return False
     
     def _checar_captura(self, s, casilla, j):
-        pass
+        """
+        True si en alguna dirección desde casilla hay una línea del
+        oponente cerrada por una ficha del jugador.
+        """
+        for direccion, vecino in MAPA_ADY[casilla].items():
+            
+            if s[vecino] != -j:
+                continue
+            
+            aux = vecino
+            
+            while aux in MAPA_ADY or direccion in MAPA_ADY[aux]:
+                
+                siguiente = MAPA_ADY[aux][direccion]
+                if s[siguiente] == j:
+                    return True
+                if s[siguiente] != -j:
+                    break
+                aux = siguiente
+
+        return False
 
     def sucesor(self, s, a, j):
         raise NotImplementedError("Hay que desarrollar este método, pues")
