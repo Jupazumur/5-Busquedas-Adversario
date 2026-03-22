@@ -14,40 +14,19 @@ class Othello(js.JuegoZT2):
         return tuple(tablero)
         
     def jugadas_legales(self, s, j):
-        # Para que una jugada sea legal:
-        #    > Debe estar vacia (s[casilla] == 0).
-        #    > Ser adyacente a una pieza del oponente en al menos una dirección.
-        #    > Tener una pieza del jugador actual al final de una línea continua 
-        #      de piezas del oponente empezando de esa casilla adyacente.
-    
+  
         jugadas_legales = []
 
         for casilla in range(64):
             if s[casilla] != 0:
                 continue
             
-            # if not self._checar_adyacentes(s, casilla, j):
-            #     continue
-
             if not self._checar_captura(s, casilla, j):
                 continue
 
-            #si cumple con ambas
             jugadas_legales.append(casilla)
 
         return jugadas_legales
-
-    # def _checar_adyacentes(self, s, casilla, j):
-    #     """
-    #     Checa las casillas adyacentes a una casilla.
-    #     True si hay una ficha del oponente en una casilla adyacente.
-    #     """
-    #     casillas_adyacentes = MAPA_ADY[casilla].values()
-
-    #     for casilla_destino in casillas_adyacentes:
-    #         if s[casilla_destino] == -j:
-    #             return True
-    #     return False
     
     def _checar_captura(self, s, casilla, j):
         """
@@ -61,7 +40,7 @@ class Othello(js.JuegoZT2):
             
             aux = vecino
             
-            while aux in MAPA_ADY or direccion in MAPA_ADY[aux]:
+            while direccion in MAPA_ADY[aux]:
                 
                 siguiente = MAPA_ADY[aux][direccion]
                 if s[siguiente] == j:
@@ -72,8 +51,48 @@ class Othello(js.JuegoZT2):
 
         return False
 
+# TODO: Combinar (de ser posible) _checar_captura y _fichas_a_voltear para no loopear dos veces
+
+    def _fichas_a_voltear(self, s, casilla, j):
+        """
+        Identifica para una casilla cuales fichas voltea una acción
+        """
+        fichas_a_voltear = []
+
+        for direccion, vecino in MAPA_ADY[casilla].items():
+            
+            if s[vecino] != -j:
+                continue
+
+            aux = vecino
+            temp = [vecino]
+
+            while direccion in MAPA_ADY[aux]: 
+                siguiente = MAPA_ADY[aux][direccion]
+                
+                if s[siguiente] == -j:
+                    temp.append(siguiente)
+    
+                elif s[siguiente] == j:
+                    fichas_a_voltear.extend(temp)
+                    break
+                    
+                elif s[siguiente] == 0:
+                    break
+
+                aux = siguiente
+
+        return fichas_a_voltear
+
     def sucesor(self, s, a, j):
-        raise NotImplementedError("Hay que desarrollar este método, pues")
+        s = list(s)
+        s[a] = j
+        
+        fichas = self._fichas_a_voltear(s, a, j)
+        for i in fichas:
+            s[i] = j
+
+        return tuple(s)
     
     def ganancia(self, s):
         raise NotImplementedError("Hay que desarrollar este método, pues")
