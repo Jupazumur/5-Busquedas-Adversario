@@ -26,14 +26,17 @@ class Othello(js.JuegoZT2):
             if s[casilla] != 0:
                 continue
             
-            if self._checar_adyacentes(s[casilla], j):
+            if not self._checar_adyacentes(s, casilla, j):
                 continue
 
-            # TODO: anadir metodo para checar la ultima
+            #si cumple con todas
+            jugadas_legales.append(casilla)
+
+            # TODO: completar metodo para checar la ultima
 
         return jugadas_legales
 
-    def _checar_adyacentes(casilla, j):
+    def _checar_adyacentes(self, s, casilla, j):
         """
         Checa las casillas adyacentes de una casilla.
         True si hay una ficha del oponente en una casilla adyacente.
@@ -41,8 +44,12 @@ class Othello(js.JuegoZT2):
         casillas_adyacentes = MAPA_ADY[casilla].values()
 
         for casilla_destino in casillas_adyacentes:
-            if casilla_destino == -j:
+            if s[casilla_destino] == -j:
                 return True
+        return False
+    
+    def _checar_captura(self, s, casilla, j):
+        pass
 
     def sucesor(self, s, a, j):
         raise NotImplementedError("Hay que desarrollar este método, pues")
