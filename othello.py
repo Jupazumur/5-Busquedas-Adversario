@@ -1,9 +1,9 @@
 import juegos_simplificado as js
 from othello_mapas import MAPA_ADYACENCIA as MAPA_ADY
-#import minimax
+import minimax
 
 class Othello(js.JuegoZT2):
-
+    
     def inicializa(self):
         # -1 es blanco, 1 es negro
         tablero = [0 for _ in range(8 * 8)]
@@ -11,10 +11,11 @@ class Othello(js.JuegoZT2):
         tablero[28] = 1
         tablero[35] = 1
         tablero[36] = -1
+
         return tuple(tablero)
         
     def jugadas_legales(self, s, j):
-  
+        
         jugadas_legales = []
 
         for casilla in range(64):
@@ -43,15 +44,18 @@ class Othello(js.JuegoZT2):
             while direccion in MAPA_ADY[aux]:
                 
                 siguiente = MAPA_ADY[aux][direccion]
+
                 if s[siguiente] == j:
                     return True
+                
                 if s[siguiente] != -j:
                     break
+                
                 aux = siguiente
 
         return False
 
-# TODO: Combinar (de ser posible) _checar_captura y _fichas_a_voltear para no loopear dos veces
+# TODO: Combinar _checar_captura y _fichas_a_voltear para no loopear dos veces
 
     def _fichas_a_voltear(self, s, casilla, j):
         """
@@ -95,19 +99,17 @@ class Othello(js.JuegoZT2):
         return tuple(s)
     
     def ganancia(self, s):
-        if sum(s) > 0:
+        sum_s = sum(s)
+
+        if sum_s > 0:
             return 1
-        elif sum(s) < 0: 
+        
+        elif sum_s < 0: 
             return -1
-        else:
-            return 0
+
+        return 0
     
     def terminal(self, s):
-        # Es terminal en estas situaciones:
-        # Tablero lleno
-        # Jugador captura todas las fichas del oponente
-        # No hay jugadas legales para ningun jugador
-        
         if 0 not in s:
             return True
         
@@ -118,3 +120,79 @@ class Othello(js.JuegoZT2):
             return True
         
         return False
+
+class InterfaceOthello(js.JuegoInterface):
+
+    # Para este prototipo O es blanco, X es negro. Se tiene que hacer que negro siempre empiece.
+    def muestra_estado(self, s):
+        """
+        Muestra el estado del juego
+        """
+        a = [' X ' if x == 1 else ' O ' if x == -1 else '   ' for x in s]
+        print('\n 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 ')
+        for i in range(8):
+            print('|'.join(a[8 * i:8 * (i + 1)]))
+            print('---+---+---+---+---+---+---+---\n')
+    
+    def muestra_ganador(self, g):
+        """
+        Muestra el ganador del juego
+        """
+        if g != 0:
+            print("Gana el jugador " + " XO"[g])
+        else:
+            print("Un asqueroso empate")
+
+    def jugador_humano(self, s, j):
+        print("Jugador", " XO"[j])
+        jugadas = list(self.juego.jugadas_legales(s, j))
+        print("Jugadas legales:", jugadas)
+        jugada = None
+        while jugada not in jugadas:
+            jugada = int(input("Jugada: "))
+        return jugada
+    
+if __name__ == '__main__':
+
+    # Negro siempre empieza, entonces J2 es el humano por ahora.
+    cfg = {
+        "Jugador 1": "Aleatorio",      #Puede ser "Humano", "Aleatorio", "Negamax", "Tiempo"
+        "Jugador 2": "Humano",   #Puede ser "Humano", "Aleatorio", "Negamax", "Tiempo"
+        "profundidad máxima": 5,
+        "tiempo": 10,
+        "ordena": None,    #Puede ser None o una función f(jugadas, j) -> lista de jugadas ordenada
+        "evalua": None       #Puede ser None o una función f(estado) -> número entre -1 y 1
+    }
+
+    def jugador_cfg(cadena):
+        if cadena == "Humano":
+            return "Humano"
+        
+        elif cadena == "Aleatorio":
+            return js.JugadorAleatorio()
+        
+        elif cadena == "Negamax":
+            return minimax.JugadorNegamax(
+                ordena=cfg["ordena"], d=cfg["profundidad máxima"], evalua=cfg["evalua"]
+            )
+        
+        elif cadena == "Tiempo":
+            return minimax.JugadorNegamaxIterativo(
+                tiempo=cfg["tiempo"], ordena=cfg["ordena"], evalua=cfg["evalua"]
+            )
+        
+        else:
+            raise ValueError("Jugador no reconocido")
+
+    interfaz = InterfaceOthello(
+        Othello(),
+        jugador1=jugador_cfg(cfg["Jugador 1"]),
+        jugador2=jugador_cfg(cfg["Jugador 2"])
+    )
+
+    print("OTHELLO")
+    print("Jugador 1:", cfg["Jugador 1"])
+    print("Jugador 2:", cfg["Jugador 2"])
+    print()
+
+    interfaz.juega()
