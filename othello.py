@@ -95,9 +95,26 @@ class Othello(js.JuegoZT2):
         return tuple(s)
     
     def ganancia(self, s):
-        raise NotImplementedError("Hay que desarrollar este método, pues")
+        if sum(s) > 0:
+            return 1
+        elif sum(s) < 0: 
+            return -1
+        else:
+            return 0
     
     def terminal(self, s):
+        # Es terminal en estas situaciones:
+        # Tablero lleno
+        # Jugador captura todas las fichas del oponente
+        # No hay jugadas legales para ningun jugador
+        
         if 0 not in s:
             return True
-        return self.ganancia(s) != 0
+        
+        elif 1 not in s or -1 not in s:
+            return True
+        
+        elif self.jugadas_legales(s, 1) == self.jugadas_legales(s, -1) == []:
+            return True
+        
+        return False
