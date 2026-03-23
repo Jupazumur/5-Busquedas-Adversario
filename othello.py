@@ -27,7 +27,7 @@ class Othello(js.JuegoZT2):
 
             jugadas_legales.append(casilla)
 
-        return jugadas_legales
+        return jugadas_legales if jugadas_legales != [] else [None]
     
     def _checar_captura(self, s, casilla, j):
         """
@@ -89,6 +89,9 @@ class Othello(js.JuegoZT2):
         return fichas_a_voltear
 
     def sucesor(self, s, a, j):
+        if a is None:
+            return s
+        
         s = list(s)
         s[a] = j
         
@@ -116,7 +119,7 @@ class Othello(js.JuegoZT2):
         elif 1 not in s or -1 not in s:
             return True
         
-        elif self.jugadas_legales(s, 1) == self.jugadas_legales(s, -1) == []:
+        elif self.jugadas_legales(s, 1) == [None] and self.jugadas_legales(s, -1) == [None]:
             return True
         
         return False
@@ -151,17 +154,25 @@ class InterfaceOthello(js.JuegoInterface):
         while jugada not in jugadas:
             jugada = int(input("Jugada: "))
         return jugada
+
+def evalua_aleatorio(estado):
+    from random import uniform
+    """
+    PARA PRUEBAS
+    Definitivamente evalua
+    """
+    return uniform(-1, 1)
     
 if __name__ == '__main__':
 
     # Negro siempre empieza, entonces J2 es el humano por ahora.
     cfg = {
-        "Jugador 1": "Aleatorio",      #Puede ser "Humano", "Aleatorio", "Negamax", "Tiempo"
-        "Jugador 2": "Humano",   #Puede ser "Humano", "Aleatorio", "Negamax", "Tiempo"
+        "Jugador 1": "Negamax",      #Puede ser "Humano", "Aleatorio", "Negamax", "Tiempo"
+        "Jugador 2": "Negamax",   #Puede ser "Humano", "Aleatorio", "Negamax", "Tiempo"
         "profundidad máxima": 5,
         "tiempo": 10,
         "ordena": None,    #Puede ser None o una función f(jugadas, j) -> lista de jugadas ordenada
-        "evalua": None       #Puede ser None o una función f(estado) -> número entre -1 y 1
+        "evalua": evalua_aleatorio       #Puede ser None o una función f(estado) -> número entre -1 y 1
     }
 
     def jugador_cfg(cadena):
