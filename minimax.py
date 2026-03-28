@@ -94,7 +94,7 @@ class JugadorNegamax(js.Jugador):
     
     def jugada(self, juego, s, j):
         return negamax(
-            juego, s, j, ordena=self.ordena, d=self.d, evalua=self.evalua
+            juego, s, j, ordena=self.ordena, d=self.d, evalua=self.evalua, transp={}
         )[0][0]
 
 

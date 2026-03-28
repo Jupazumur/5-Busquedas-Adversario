@@ -73,6 +73,10 @@ MAPA_ADYACENCIA = {
     63: {(-1, 1): 54, (0, 1): 55, (-1, 0): 62}
 }
 
+ESQUINAS = (
+    0, 7, 56, 63
+)
+
 def generar_mapa_ady():
     """
     Genera un diccionario de diccionarios asociando cada casilla con su 

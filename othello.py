@@ -162,6 +162,47 @@ def evalua_aleatorio(estado):
     Definitivamente evalua
     """
     return uniform(-1, 1)
+
+ # Heurísticas de:
+ # https://doi.org/10.1007/978-1-4842-3357-3_16
+
+def dif_piezas(estado):
+    blanco = estado.count(-1)
+    negro = estado.count(1)
+
+    dif = abs(blanco - negro)
+    suma = blanco + negro
+
+    return dif / suma
+
+def dif_piezas_2(estado):
+    blanco = estado.count(-1)
+    negro = estado.count(1)
+
+    #dif = abs(blanco - negro)
+    suma = blanco + negro
+
+    if negro > blanco:
+        return 100 * negro / suma
+    elif negro < blanco:
+        return 100 * blanco / suma
+    else:
+        return 0
+    
+def ocupacion_esquinas(estado):
+    from othello_mapas import ESQUINAS
+    blanco = 0
+    negro = 0
+
+    for esquina in ESQUINAS:
+        if estado[esquina] == 0:
+            continue
+        elif estado[esquina] == -1:
+            blanco += 1
+        elif estado[esquina] == 1:
+            negro += 1
+    
+    return 25*negro - 25*blanco
     
 if __name__ == '__main__':
 
@@ -172,7 +213,7 @@ if __name__ == '__main__':
         "profundidad máxima": 5,
         "tiempo": 10,
         "ordena": None,    #Puede ser None o una función f(jugadas, j) -> lista de jugadas ordenada
-        "evalua": evalua_aleatorio       #Puede ser None o una función f(estado) -> número entre -1 y 1
+        "evalua": ocupacion_esquinas       #Puede ser None o una función f(estado) -> número entre -1 y 1
     }
 
     def jugador_cfg(cadena):
