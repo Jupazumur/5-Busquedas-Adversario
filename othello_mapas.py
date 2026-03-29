@@ -77,6 +77,18 @@ ESQUINAS = (
     0, 7, 56, 63
 )
 
+# https://www.scribd.com/document/353439817/An-Analysis-of-Heuristics-in-Othello
+MAPA_PESOS = (
+     4, -3,  2,  2,  2,  2, -3,  4,
+    -3, -4, -1, -1, -1, -1, -4, -3,
+     2, -1,  1,  0,  0,  1, -1,  2,
+     2, -1,  0,  1,  1,  0, -1,  2,
+     2, -1,  0,  1,  1,  0, -1,  2,
+     2, -1,  1,  0,  0,  1, -1,  2,
+    -3, -4, -1, -1, -1, -1, -4, -3,
+     4, -3,  2,  2,  2,  2, -3,  4
+)
+
 def generar_mapa_ady():
     """
     Genera un diccionario de diccionarios asociando cada casilla con su 

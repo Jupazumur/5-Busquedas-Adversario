@@ -155,16 +155,8 @@ class InterfaceOthello(js.JuegoInterface):
             jugada = int(input("Jugada: "))
         return jugada
 
-def evalua_aleatorio(estado):
-    from random import uniform
-    """
-    PARA PRUEBAS
-    Definitivamente evalua
-    """
-    return uniform(-1, 1)
-
- # Heurísticas de:
- # https://doi.org/10.1007/978-1-4842-3357-3_16
+# Heurísticas de:
+# https://doi.org/10.1007/978-1-4842-3357-3_16
 
 def dif_piezas(estado):
     blanco = estado.count(-1)
@@ -203,16 +195,21 @@ def ocupacion_esquinas(estado):
             negro += 1
     
     return 25*negro - 25*blanco
+
+def ordenar_por_pesos(estado, jugadas, jugador):
+    from othello_mapas import MAPA_PESOS as pesos
+    
+    return sorted(jugadas, key=lambda i: pesos[i] if i is not None else 0, reverse=True)
     
 if __name__ == '__main__':
 
-    # Negro siempre empieza, entonces J2 es el humano por ahora.
+    # J1 es negro, negro siempre empieza
     cfg = {
         "Jugador 1": "Negamax",      #Puede ser "Humano", "Aleatorio", "Negamax", "Tiempo"
-        "Jugador 2": "Negamax",   #Puede ser "Humano", "Aleatorio", "Negamax", "Tiempo"
+        "Jugador 2": "Aleatorio",   #Puede ser "Humano", "Aleatorio", "Negamax", "Tiempo"
         "profundidad máxima": 5,
         "tiempo": 10,
-        "ordena": None,    #Puede ser None o una función f(jugadas, j) -> lista de jugadas ordenada
+        "ordena": ordenar_por_pesos,    #Puede ser None o una función f(jugadas, j) -> lista de jugadas ordenada
         "evalua": ocupacion_esquinas       #Puede ser None o una función f(estado) -> número entre -1 y 1
     }
 
