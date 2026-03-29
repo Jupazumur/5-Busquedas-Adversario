@@ -16,18 +16,13 @@ class Othello(js.JuegoZT2):
         
     def jugadas_legales(self, s, j):
         
-        jugadas_legales = []
+        jugadas_legales = [
+            casilla for casilla in range(64)
+            if s[casilla] == 0 
+            and self._checar_captura(s, casilla, j)
+        ]
 
-        for casilla in range(64):
-            if s[casilla] != 0:
-                continue
-            
-            if not self._checar_captura(s, casilla, j):
-                continue
-
-            jugadas_legales.append(casilla)
-
-        return jugadas_legales if jugadas_legales != [] else [None]
+        return jugadas_legales or [None]
     
     def _checar_captura(self, s, casilla, j):
         """
@@ -54,8 +49,6 @@ class Othello(js.JuegoZT2):
                 aux = siguiente
 
         return False
-
-# TODO: Combinar _checar_captura y _fichas_a_voltear para no loopear dos veces
 
     def _fichas_a_voltear(self, s, casilla, j):
         """
@@ -126,7 +119,6 @@ class Othello(js.JuegoZT2):
 
 class InterfaceOthello(js.JuegoInterface):
 
-    # Para este prototipo O es blanco, X es negro. Se tiene que hacer que negro siempre empiece.
     def muestra_estado(self, s):
         """
         Muestra el estado del juego
@@ -162,7 +154,7 @@ def dif_piezas(estado):
     blanco = estado.count(-1)
     negro = estado.count(1)
 
-    dif = abs(blanco - negro)
+    dif = negro - blanco
     suma = blanco + negro
 
     return dif / suma
@@ -171,13 +163,12 @@ def dif_piezas_2(estado):
     blanco = estado.count(-1)
     negro = estado.count(1)
 
-    #dif = abs(blanco - negro)
     suma = blanco + negro
 
     if negro > blanco:
         return 100 * negro / suma
     elif negro < blanco:
-        return 100 * blanco / suma
+        return -100 * blanco / suma
     else:
         return 0
     
@@ -206,7 +197,7 @@ if __name__ == '__main__':
     # J1 es negro, negro siempre empieza
     cfg = {
         "Jugador 1": "Negamax",      #Puede ser "Humano", "Aleatorio", "Negamax", "Tiempo"
-        "Jugador 2": "Aleatorio",   #Puede ser "Humano", "Aleatorio", "Negamax", "Tiempo"
+        "Jugador 2": "Negamax",   #Puede ser "Humano", "Aleatorio", "Negamax", "Tiempo"
         "profundidad máxima": 5,
         "tiempo": 10,
         "ordena": ordenar_por_pesos,    #Puede ser None o una función f(jugadas, j) -> lista de jugadas ordenada
