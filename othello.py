@@ -1,5 +1,7 @@
 import juegos_simplificado as js
 from othello_mapas import MAPA_ADYACENCIA as MAPA_ADY
+from othello_mapas import ESQUINAS
+from othello_mapas import MAPA_PESOS as PESOS
 import minimax
 
 class Othello(js.JuegoZT2):
@@ -173,7 +175,6 @@ def dif_piezas_2(estado):
         return 0
     
 def ocupacion_esquinas(estado):
-    from othello_mapas import ESQUINAS
     blanco = 0
     negro = 0
 
@@ -188,9 +189,7 @@ def ocupacion_esquinas(estado):
     return 25*negro - 25*blanco
 
 def ordenar_por_pesos(estado, jugadas, jugador):
-    from othello_mapas import MAPA_PESOS as pesos
-    
-    return sorted(jugadas, key=lambda i: pesos[i] if i is not None else 0, reverse=True)
+    return sorted(jugadas, key=lambda i: PESOS[i] if i is not None else 0, reverse=True)
     
 if __name__ == '__main__':
 
